@@ -18,12 +18,6 @@ When you're ready, dive into the setup instructions.
 
 {% page-ref page="setup.md" %}
 
-
-
-## 
-
-## 
-
 ## License
 
 This demo code is licensed under the [Apache-2.0 license](https://github.com/GitbookIO/visitor-authentication-with-oauth/blob/main/LICENSE).
