@@ -16,7 +16,7 @@ Check out our [visual overview of the authorization procedure](https://miro.com/
 
 When you're ready, dive into the setup instructions.
 
-{% page-ref page="setup.md" %}
+{% page-ref page="../setup.md" %}
 
 ## License
 
