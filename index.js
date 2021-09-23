@@ -8,29 +8,32 @@ const port = process.env.PORT || 3000;
 const {
   OAUTH_CLIENT_ID,
   OAUTH_CLIENT_SECRET,
-  OAUTH_API_REDIRECT_URL,
-  OAUTH_TOKEN_EXCHANGE_URL,
-  GITBOOK_REDIRECT_URL,
+  OAUTH_AUTHORIZATION_ENDPOINT,
+  OAUTH_TOKEN_ENDPOINT,
+  OAUTH_REDIRECT_URI,
+  GITBOOK_DOCUMENTATION_URL,
   GITBOOK_SIGNING_SECRET,
 } = process.env;
-
-/*
- * TODO: Set the URL to your Visitor Auth Flow Handler
- */
-const OAUTH_INBOUND_REDIRECT_URI = "http://localhost:3000/oauth-verification";
 
 /*
  * Here is where your Auth Implementation starts the OAuth procedure
  */
 app.get("/gitbook-visitor-auth-endpoint", (req, res) => {
+  // If you have a mechanism for storing state across multiple requests, we
+  // strongly recommend providing a random state parameter with the authorization
+  // request so that you can verify that inbound requests to the /oauth-verification
+  // endpoint originate from here. For more info please consult the following doc:
+  // https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1
+  // const state = random-state-to-correlate-requests
+
   console.log("Inbound visitor authentication request");
   const authParameters = {
     client_id: OAUTH_CLIENT_ID,
-    client_secret: OAUTH_CLIENT_SECRET,
     response_type: "code",
-    redirect_uri: OAUTH_INBOUND_REDIRECT_URI,
+    redirect_uri: OAUTH_REDIRECT_URI,
+    // state
   };
-  const outboundRedirectURI = `${OAUTH_API_REDIRECT_URL}?${new URLSearchParams(
+  const outboundRedirectURI = `${OAUTH_AUTHORIZATION_ENDPOINT}?${new URLSearchParams(
     authParameters
   ).toString()}`;
 
@@ -63,7 +66,7 @@ app.get("/oauth-verification", async (req, res) => {
       jwt_token: signedJWT,
     };
     res.redirect(
-      `${GITBOOK_REDIRECT_URL}?${new URLSearchParams(
+      `${GITBOOK_DOCUMENTATION_URL}?${new URLSearchParams(
         gitBookRedirectParams
       ).toString()}`
     );
@@ -77,7 +80,7 @@ app.get("/oauth-verification", async (req, res) => {
  * (IETF RFC 6749)
  */
 async function verifyCode(code) {
-  const tokenVerificationResponse = await fetch(OAUTH_TOKEN_EXCHANGE_URL, {
+  const tokenVerificationResponse = await fetch(OAUTH_TOKEN_ENDPOINT, {
     headers: {
       "content-type": "application/x-www-form-urlencoded",
       // Some OAuth servers require client information in the authorization header,
@@ -92,7 +95,7 @@ async function verifyCode(code) {
       client_id: OAUTH_CLIENT_ID,
       client_secret: OAUTH_CLIENT_SECRET,
       code,
-      redirect_uri: OAUTH_INBOUND_REDIRECT_URI,
+      redirect_uri: OAUTH_REDIRECT_URI,
     }).toString(),
   });
 
