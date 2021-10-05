@@ -31,6 +31,8 @@ app.get("/gitbook-visitor-auth-endpoint", (req, res) => {
     client_id: OAUTH_CLIENT_ID,
     response_type: "code",
     redirect_uri: OAUTH_REDIRECT_URI,
+    scope: "user-top-read",
+    show_dialog: true,
     // state
   };
   const outboundRedirectURI = `${OAUTH_AUTHORIZATION_ENDPOINT}?${new URLSearchParams(
@@ -85,7 +87,7 @@ async function verifyCode(code) {
       "content-type": "application/x-www-form-urlencoded",
       // Some OAuth servers require client information in the authorization header,
       // rather than in the request body as below.
-      // authorization: `Bearer ${Buffer.from(
+      // authorization: `Basic ${Buffer.from(
       //   `${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}`
       // ).toString("base64")}`,
     },
@@ -101,7 +103,37 @@ async function verifyCode(code) {
 
   const data = await tokenVerificationResponse.json();
 
-  return data.hasOwnProperty("access_token");
+  return (
+    data.hasOwnProperty("access_token") &&
+    isCarlyRaeJepsenFan(data["access_token"])
+  );
+}
+
+async function isCarlyRaeJepsenFan(accessToken) {
+  const topArtistsResponse = await fetch(
+    "https://api.spotify.com/v1/me/top/artists?time_range=long_term",
+    {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  try {
+    const topArtists = await topArtistsResponse.json();
+    const topArtistsContainsCarlyRaeJepsen = !!topArtists.items.find(
+      (artist) => artist.name === "Carly Rae Jepsen"
+    );
+    console.log(
+      topArtistsContainsCarlyRaeJepsen
+        ? "Top artists contains Carly Rae Jepsen"
+        : "Top artists does not contain Carly Rae Jepsen"
+    );
+    return topArtistsContainsCarlyRaeJepsen;
+  } catch (e) {
+    return false;
+  }
 }
 
 app.listen(port, () => {
